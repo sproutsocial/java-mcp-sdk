@@ -302,6 +302,12 @@ public class HttpServletSseServerTransportProvider extends HttpServlet implement
 		// set security context if available (otherwise it'll be SecurityContext.EMPTY)
 		if (securityContext != null) {
 			// Update the session's security context
+			if (session.getSecurityContext() == null) {
+				//TODO should we allow this if no previous security context?
+			} else if (!session.getSecurityContext().principal().equals(securityContext.principal()) {
+				// TODO if the principal has changed, return unauthorized
+				// don't allow changing the principal for the session
+			}
 			session.setSecurityContext(securityContext);
 		}
 

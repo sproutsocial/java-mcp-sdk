@@ -262,6 +262,10 @@ public class McpServerSession implements McpSession {
 		});
 	}
 
+	public SecurityContext getSecurityContext() {
+		return securityContext;
+	}
+
 	public void setSecurityContext(SecurityContext securityContext) {
 		this.securityContext = securityContext != null ? securityContext : SecurityContext.EMPTY;
 	}
