@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.modelcontextprotocol.spec.DefaultMcpTransportSession;
 import io.modelcontextprotocol.spec.DefaultMcpTransportStream;
+import io.modelcontextprotocol.spec.HttpHeaders;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -66,6 +67,8 @@ public class WebClientStreamableHttpTransport implements McpClientTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebClientStreamableHttpTransport.class);
 
+	private static final String MCP_PROTOCOL_VERSION = "2025-03-26";
+
 	private static final String DEFAULT_ENDPOINT = "/mcp";
 
 	/**
@@ -103,6 +106,11 @@ public class WebClientStreamableHttpTransport implements McpClientTransport {
 		this.activeSession.set(createTransportSession());
 	}
 
+	@Override
+	public String protocolVersion() {
+		return MCP_PROTOCOL_VERSION;
+	}
+
 	/**
 	 * Create a stateful builder for creating {@link WebClientStreamableHttpTransport}
 	 * instances.
@@ -128,12 +136,20 @@ public class WebClientStreamableHttpTransport implements McpClientTransport {
 
 	private DefaultMcpTransportSession createTransportSession() {
 		Function<String, Publisher<Void>> onClose = sessionId -> sessionId == null ? Mono.empty()
-				: webClient.delete().uri(this.endpoint).headers(httpHeaders -> {
-					httpHeaders.add("mcp-session-id", sessionId);
-				}).retrieve().toBodilessEntity().onErrorComplete(e -> {
-					logger.warn("Got error when closing transport", e);
-					return true;
-				}).then();
+				: webClient.delete()
+					.uri(this.endpoint)
+					.header(HttpHeaders.PROTOCOL_VERSION, MCP_PROTOCOL_VERSION)
+					.headers(httpHeaders -> {
+						httpHeaders.add(HttpHeaders.MCP_SESSION_ID, sessionId);
+						httpHeaders.add(HttpHeaders.PROTOCOL_VERSION, MCP_PROTOCOL_VERSION);
+					})
+					.retrieve()
+					.toBodilessEntity()
+					.onErrorComplete(e -> {
+						logger.warn("Got error when closing transport", e);
+						return true;
+					})
+					.then();
 		return new DefaultMcpTransportSession(onClose);
 	}
 
@@ -186,10 +202,11 @@ public class WebClientStreamableHttpTransport implements McpClientTransport {
 			Disposable connection = webClient.get()
 				.uri(this.endpoint)
 				.accept(MediaType.TEXT_EVENT_STREAM)
+				.header(HttpHeaders.PROTOCOL_VERSION, MCP_PROTOCOL_VERSION)
 				.headers(httpHeaders -> {
-					transportSession.sessionId().ifPresent(id -> httpHeaders.add("mcp-session-id", id));
+					transportSession.sessionId().ifPresent(id -> httpHeaders.add(HttpHeaders.MCP_SESSION_ID, id));
 					if (stream != null) {
-						stream.lastId().ifPresent(id -> httpHeaders.add("last-event-id", id));
+						stream.lastId().ifPresent(id -> httpHeaders.add(HttpHeaders.LAST_EVENT_ID, id));
 					}
 				})
 				.exchangeToFlux(response -> {
@@ -246,13 +263,14 @@ public class WebClientStreamableHttpTransport implements McpClientTransport {
 			Disposable connection = webClient.post()
 				.uri(this.endpoint)
 				.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM)
+				.header(HttpHeaders.PROTOCOL_VERSION, MCP_PROTOCOL_VERSION)
 				.headers(httpHeaders -> {
-					transportSession.sessionId().ifPresent(id -> httpHeaders.add("mcp-session-id", id));
+					transportSession.sessionId().ifPresent(id -> httpHeaders.add(HttpHeaders.MCP_SESSION_ID, id));
 				})
 				.bodyValue(message)
 				.exchangeToFlux(response -> {
 					if (transportSession
-						.markInitialized(response.headers().asHttpHeaders().getFirst("mcp-session-id"))) {
+						.markInitialized(response.headers().asHttpHeaders().getFirst(HttpHeaders.MCP_SESSION_ID))) {
 						// Once we have a session, we try to open an async stream for
 						// the server to send notifications and requests out-of-band.
 						reconnect(null).contextWrite(sink.contextView()).subscribe();
