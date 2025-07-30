@@ -6,22 +6,24 @@ package io.modelcontextprotocol.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
-import io.modelcontextprotocol.spec.McpServerTransportProvider;
+import io.modelcontextprotocol.server.transport.WebFluxStreamableServerTransportProvider;
+import io.modelcontextprotocol.spec.McpStreamableServerTransportProvider;
 import org.junit.jupiter.api.Timeout;
-import reactor.netty.DisposableServer;
-import reactor.netty.http.server.HttpServer;
-
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.server.RouterFunctions;
+import reactor.netty.DisposableServer;
+import reactor.netty.http.server.HttpServer;
 
 /**
- * Tests for {@link McpSyncServer} using {@link WebFluxSseServerTransportProvider}.
+ * Tests for {@link McpAsyncServer} using
+ * {@link WebFluxStreamableServerTransportProvider}.
  *
  * @author Christian Tzolov
+ * @author Dariusz Jędrzejczyk
  */
 @Timeout(15) // Giving extra time beyond the client timeout
-class WebFluxSseMcpSyncServerTests extends AbstractMcpSyncServerTests {
+class WebFluxStreamableMcpSyncServerTests extends AbstractMcpSyncServerTests {
 
 	private static final int PORT = TestUtil.findAvailablePort();
 
@@ -29,25 +31,25 @@ class WebFluxSseMcpSyncServerTests extends AbstractMcpSyncServerTests {
 
 	private DisposableServer httpServer;
 
-	private WebFluxSseServerTransportProvider transportProvider;
+	private McpStreamableServerTransportProvider createMcpTransportProvider() {
+		var transportProvider = WebFluxStreamableServerTransportProvider.builder()
+			.objectMapper(new ObjectMapper())
+			.messageEndpoint(MESSAGE_ENDPOINT)
+			.build();
+
+		HttpHandler httpHandler = RouterFunctions.toHttpHandler(transportProvider.getRouterFunction());
+		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
+		httpServer = HttpServer.create().port(PORT).handle(adapter).bindNow();
+		return transportProvider;
+	}
 
 	@Override
 	protected McpServer.SyncSpecification<?> prepareSyncServerBuilder() {
 		return McpServer.sync(createMcpTransportProvider());
 	}
 
-	private McpServerTransportProvider createMcpTransportProvider() {
-		transportProvider = new WebFluxSseServerTransportProvider.Builder().objectMapper(new ObjectMapper())
-			.messageEndpoint(MESSAGE_ENDPOINT)
-			.build();
-		return transportProvider;
-	}
-
 	@Override
 	protected void onStart() {
-		HttpHandler httpHandler = RouterFunctions.toHttpHandler(transportProvider.getRouterFunction());
-		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
-		httpServer = HttpServer.create().port(PORT).handle(adapter).bindNow();
 	}
 
 	@Override
