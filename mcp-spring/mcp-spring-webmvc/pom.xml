@@ -11,8 +11,8 @@
 	</parent>
 	<artifactId>mcp-spring-webmvc</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Web MVC implementation of the Java MCP SSE transport</name>
-	<description></description>
+	<name>Spring Web MVC transports</name>
+	<description>Web MVC implementation for the SSE and Streamable Http Server transports</description>
 	<url>https://github.com/modelcontextprotocol/java-sdk</url>
 
 	<scm>

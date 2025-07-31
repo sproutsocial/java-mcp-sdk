@@ -11,8 +11,8 @@
 	</parent>
 	<artifactId>mcp-spring-webflux</artifactId>
 	<packaging>jar</packaging>
-	<name>WebFlux implementation of the Java MCP SSE transport</name>
-	<description></description>
+	<name>WebFlux transports</name>
+	<description>WebFlux implementation for the SSE and Streamable Http Client and Server transports</description>
 	<url>https://github.com/modelcontextprotocol/java-sdk</url>
 
 	<scm>
