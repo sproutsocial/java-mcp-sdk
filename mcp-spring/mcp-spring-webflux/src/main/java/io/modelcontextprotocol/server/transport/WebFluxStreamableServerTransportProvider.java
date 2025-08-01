@@ -1,3 +1,7 @@
+/*
+ * Copyright 2025-2025 the original author or authors.
+ */
+
 package io.modelcontextprotocol.server.transport;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -89,10 +93,6 @@ public class WebFluxStreamableServerTransportProvider implements McpStreamableSe
 
 			this.keepAliveScheduler.start();
 		}
-		else {
-			logger.warn("Keep-alive interval is not set or invalid. No keep-alive will be scheduled.");
-		}
-
 	}
 
 	@Override

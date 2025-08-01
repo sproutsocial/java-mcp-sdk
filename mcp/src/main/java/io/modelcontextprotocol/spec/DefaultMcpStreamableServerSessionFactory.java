@@ -1,8 +1,11 @@
+/*
+ * Copyright 2024-2025 the original author or authors.
+ */
+
 package io.modelcontextprotocol.spec;
 
 import io.modelcontextprotocol.server.McpNotificationHandler;
 import io.modelcontextprotocol.server.McpRequestHandler;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.Map;

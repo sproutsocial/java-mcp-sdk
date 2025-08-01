@@ -95,9 +95,6 @@ public class WebMvcStreamableServerTransportProvider implements McpStreamableSer
 
 	private McpTransportContextExtractor<ServerRequest> contextExtractor;
 
-	// private Function<ServerRequest, McpTransportContext> contextExtractor = req -> new
-	// DefaultMcpTransportContext();
-
 	/**
 	 * Flag indicating if the transport is shutting down.
 	 */
@@ -141,9 +138,6 @@ public class WebMvcStreamableServerTransportProvider implements McpStreamableSer
 				.build();
 
 			this.keepAliveScheduler.start();
-		}
-		else {
-			logger.warn("Keep-alive interval is not set or invalid. No keep-alive will be scheduled.");
 		}
 	}
 

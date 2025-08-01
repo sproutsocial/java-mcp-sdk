@@ -1,6 +1,7 @@
 /*
 * Copyright 2025 - 2025 the original author or authors.
 */
+
 package io.modelcontextprotocol.spec;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
