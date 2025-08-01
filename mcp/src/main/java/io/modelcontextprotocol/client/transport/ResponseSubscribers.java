@@ -238,10 +238,9 @@ class ResponseSubscribers {
 
 		@Override
 		protected void hookOnComplete() {
-			if (this.eventBuilder.length() > 0) {
-				String data = this.eventBuilder.toString();
-				this.sink.next(new AggregateResponseEvent(responseInfo, data));
-			}
+			String data = this.eventBuilder.toString();
+			this.sink.next(new AggregateResponseEvent(responseInfo, data));
+
 			this.sink.complete();
 		}
 
