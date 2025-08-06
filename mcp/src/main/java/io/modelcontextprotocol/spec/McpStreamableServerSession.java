@@ -197,7 +197,7 @@ public class McpStreamableServerSession implements McpLoggableSession {
 			McpTransportContext transportContext = ctx.getOrDefault(McpTransportContext.KEY, McpTransportContext.EMPTY);
 			McpNotificationHandler notificationHandler = this.notificationHandlers.get(notification.method());
 			if (notificationHandler == null) {
-				logger.error("No handler registered for notification method: {}", notification.method());
+				logger.warn("No handler registered for notification method: {}", notification);
 				return Mono.empty();
 			}
 			McpLoggableSession listeningStream = this.listeningStreamRef.get();
