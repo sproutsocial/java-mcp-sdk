@@ -42,11 +42,11 @@ class WebMvcSseIntegrationTests extends AbstractMcpClientServerIntegrationTests 
 
 		clientBuilders.put("httpclient",
 				McpClient.sync(HttpClientSseClientTransport.builder("http://localhost:" + port).build())
-					.initializationTimeout(Duration.ofHours(10))
 					.requestTimeout(Duration.ofHours(10)));
 
 		clientBuilders.put("webflux", McpClient
-			.sync(WebFluxSseClientTransport.builder(WebClient.builder().baseUrl("http://localhost:" + port)).build()));
+			.sync(WebFluxSseClientTransport.builder(WebClient.builder().baseUrl("http://localhost:" + port)).build())
+			.requestTimeout(Duration.ofHours(10)));
 	}
 
 	@Configuration
@@ -55,7 +55,10 @@ class WebMvcSseIntegrationTests extends AbstractMcpClientServerIntegrationTests 
 
 		@Bean
 		public WebMvcSseServerTransportProvider webMvcSseServerTransportProvider() {
-			return new WebMvcSseServerTransportProvider(new ObjectMapper(), MESSAGE_ENDPOINT);
+			return WebMvcSseServerTransportProvider.builder()
+				.objectMapper(new ObjectMapper())
+				.messageEndpoint(MESSAGE_ENDPOINT)
+				.build();
 		}
 
 		@Bean
