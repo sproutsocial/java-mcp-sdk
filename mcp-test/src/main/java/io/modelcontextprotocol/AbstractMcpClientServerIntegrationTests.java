@@ -8,6 +8,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertWith;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 
@@ -144,6 +145,8 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 		CallToolResult callResponse = new McpSchema.CallToolResult(List.of(new McpSchema.TextContent("CALL RESPONSE")),
 				null);
 
+		AtomicReference<CreateMessageResult> samplingResult = new AtomicReference<>();
+
 		McpServerFeatures.AsyncToolSpecification tool = McpServerFeatures.AsyncToolSpecification.builder()
 			.tool(Tool.builder().name("tool1").description("tool1 description").inputSchema(emptyJsonSchema).build())
 			.callHandler((exchange, request) -> {
@@ -159,37 +162,35 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 						.build())
 					.build();
 
-				StepVerifier.create(exchange.createMessage(createMessageRequest)).consumeNextWith(result -> {
-					assertThat(result).isNotNull();
-					assertThat(result.role()).isEqualTo(Role.USER);
-					assertThat(result.content()).isInstanceOf(McpSchema.TextContent.class);
-					assertThat(((McpSchema.TextContent) result.content()).text()).isEqualTo("Test message");
-					assertThat(result.model()).isEqualTo("MockModelName");
-					assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
-				}).verifyComplete();
-
-				return Mono.just(callResponse);
+				return exchange.createMessage(createMessageRequest)
+					.doOnNext(samplingResult::set)
+					.thenReturn(callResponse);
 			})
 			.build();
 
-		//@formatter:off		
-		var mcpServer = prepareAsyncServerBuilder()
-				.serverInfo("test-server", "1.0.0")
-				.tools(tool)
-				.build();
+		var mcpServer = prepareAsyncServerBuilder().serverInfo("test-server", "1.0.0").tools(tool).build();
 
-		try (
-			var mcpClient = clientBuilder.clientInfo(new McpSchema.Implementation("Sample client", "0.0.0"))
-				.capabilities(ClientCapabilities.builder().sampling().build())
-				.sampling(samplingHandler)
-				.build()) {//@formatter:on
+		try (var mcpClient = clientBuilder.clientInfo(new McpSchema.Implementation("Sample client", "0.0.0"))
+			.capabilities(ClientCapabilities.builder().sampling().build())
+			.sampling(samplingHandler)
+			.build()) {
 
 			InitializeResult initResult = mcpClient.initialize();
 			assertThat(initResult).isNotNull();
 
 			CallToolResult response = mcpClient.callTool(new McpSchema.CallToolRequest("tool1", Map.of()));
 
-			assertThat(response).isNotNull().isEqualTo(callResponse);
+			assertThat(response).isNotNull();
+			assertThat(response).isEqualTo(callResponse);
+
+			assertWith(samplingResult.get(), result -> {
+				assertThat(result).isNotNull();
+				assertThat(result.role()).isEqualTo(Role.USER);
+				assertThat(result.content()).isInstanceOf(McpSchema.TextContent.class);
+				assertThat(((McpSchema.TextContent) result.content()).text()).isEqualTo("Test message");
+				assertThat(result.model()).isEqualTo("MockModelName");
+				assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
+			});
 		}
 		mcpServer.close();
 	}
@@ -225,6 +226,8 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 		CallToolResult callResponse = new McpSchema.CallToolResult(List.of(new McpSchema.TextContent("CALL RESPONSE")),
 				null);
 
+		AtomicReference<CreateMessageResult> samplingResult = new AtomicReference<>();
+
 		McpServerFeatures.AsyncToolSpecification tool = McpServerFeatures.AsyncToolSpecification.builder()
 			.tool(Tool.builder().name("tool1").description("tool1 description").inputSchema(emptyJsonSchema).build())
 			.callHandler((exchange, request) -> {
@@ -240,16 +243,9 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 						.build())
 					.build();
 
-				StepVerifier.create(exchange.createMessage(createMessageRequest)).consumeNextWith(result -> {
-					assertThat(result).isNotNull();
-					assertThat(result.role()).isEqualTo(Role.USER);
-					assertThat(result.content()).isInstanceOf(McpSchema.TextContent.class);
-					assertThat(((McpSchema.TextContent) result.content()).text()).isEqualTo("Test message");
-					assertThat(result.model()).isEqualTo("MockModelName");
-					assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
-				}).verifyComplete();
-
-				return Mono.just(callResponse);
+				return exchange.createMessage(createMessageRequest)
+					.doOnNext(samplingResult::set)
+					.thenReturn(callResponse);
 			})
 			.build();
 
@@ -265,6 +261,15 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		assertThat(response).isNotNull();
 		assertThat(response).isEqualTo(callResponse);
+
+		assertWith(samplingResult.get(), result -> {
+			assertThat(result).isNotNull();
+			assertThat(result.role()).isEqualTo(Role.USER);
+			assertThat(result.content()).isInstanceOf(McpSchema.TextContent.class);
+			assertThat(((McpSchema.TextContent) result.content()).text()).isEqualTo("Test message");
+			assertThat(result.model()).isEqualTo("MockModelName");
+			assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
+		});
 
 		mcpClient.close();
 		mcpServer.close();
@@ -312,16 +317,7 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 						.build())
 					.build();
 
-				StepVerifier.create(exchange.createMessage(createMessageRequest)).consumeNextWith(result -> {
-					assertThat(result).isNotNull();
-					assertThat(result.role()).isEqualTo(Role.USER);
-					assertThat(result.content()).isInstanceOf(McpSchema.TextContent.class);
-					assertThat(((McpSchema.TextContent) result.content()).text()).isEqualTo("Test message");
-					assertThat(result.model()).isEqualTo("MockModelName");
-					assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
-				}).verifyComplete();
-
-				return Mono.just(callResponse);
+				return exchange.createMessage(createMessageRequest).thenReturn(callResponse);
 			})
 			.build();
 
@@ -335,7 +331,7 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		assertThatExceptionOfType(McpError.class).isThrownBy(() -> {
 			mcpClient.callTool(new McpSchema.CallToolRequest("tool1", Map.of()));
-		}).withMessageContaining("Timeout");
+		}).withMessageContaining("1000ms");
 
 		mcpClient.close();
 		mcpServer.close();
@@ -352,19 +348,14 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		McpServerFeatures.AsyncToolSpecification tool = McpServerFeatures.AsyncToolSpecification.builder()
 			.tool(Tool.builder().name("tool1").description("tool1 description").inputSchema(emptyJsonSchema).build())
-			.callHandler((exchange, request) -> {
-
-				exchange.createElicitation(mock(McpSchema.ElicitRequest.class)).block();
-
-				return Mono.just(mock(CallToolResult.class));
-			})
+			.callHandler((exchange, request) -> exchange.createElicitation(mock(ElicitRequest.class))
+				.then(Mono.just(mock(CallToolResult.class))))
 			.build();
 
 		var server = prepareAsyncServerBuilder().serverInfo("test-server", "1.0.0").tools(tool).build();
 
-		try (
-				// Create client without elicitation capabilities
-				var client = clientBuilder.clientInfo(new McpSchema.Implementation("Sample client", "0.0.0")).build()) {
+		// Create client without elicitation capabilities
+		try (var client = clientBuilder.clientInfo(new McpSchema.Implementation("Sample client", "0.0.0")).build()) {
 
 			assertThat(client.initialize()).isNotNull();
 
@@ -440,17 +431,10 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		var clientBuilder = clientBuilders.get(clientType);
 
-		Function<McpSchema.ElicitRequest, McpSchema.ElicitResult> elicitationHandler = request -> {
+		Function<ElicitRequest, ElicitResult> elicitationHandler = request -> {
 			assertThat(request.message()).isNotEmpty();
 			assertThat(request.requestedSchema()).isNotNull();
-			try {
-				TimeUnit.SECONDS.sleep(2);
-			}
-			catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT,
-					Map.of("message", request.message()));
+			return new ElicitResult(ElicitResult.Action.ACCEPT, Map.of("message", request.message()));
 		};
 
 		var mcpClient = clientBuilder.clientInfo(new McpSchema.Implementation("Sample client", "0.0.0"))
@@ -460,6 +444,8 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		CallToolResult callResponse = new McpSchema.CallToolResult(List.of(new McpSchema.TextContent("CALL RESPONSE")),
 				null);
+
+		AtomicReference<ElicitResult> resultRef = new AtomicReference<>();
 
 		McpServerFeatures.AsyncToolSpecification tool = McpServerFeatures.AsyncToolSpecification.builder()
 			.tool(Tool.builder().name("tool1").description("tool1 description").inputSchema(emptyJsonSchema).build())
@@ -471,13 +457,9 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 							Map.of("type", "object", "properties", Map.of("message", Map.of("type", "string"))))
 					.build();
 
-				StepVerifier.create(exchange.createElicitation(elicitationRequest)).consumeNextWith(result -> {
-					assertThat(result).isNotNull();
-					assertThat(result.action()).isEqualTo(McpSchema.ElicitResult.Action.ACCEPT);
-					assertThat(result.content().get("message")).isEqualTo("Test message");
-				}).verifyComplete();
-
-				return Mono.just(callResponse);
+				return exchange.createElicitation(elicitationRequest)
+					.doOnNext(resultRef::set)
+					.then(Mono.just(callResponse));
 			})
 			.build();
 
@@ -493,6 +475,11 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 
 		assertThat(response).isNotNull();
 		assertThat(response).isEqualTo(callResponse);
+		assertWith(resultRef.get(), result -> {
+			assertThat(result).isNotNull();
+			assertThat(result.action()).isEqualTo(McpSchema.ElicitResult.Action.ACCEPT);
+			assertThat(result.content().get("message")).isEqualTo("Test message");
+		});
 
 		mcpClient.closeGracefully();
 		mcpServer.closeGracefully().block();
@@ -870,7 +857,7 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 			})
 			.build();
 
-		AtomicReference<List<Tool>> rootsRef = new AtomicReference<>();
+		AtomicReference<List<Tool>> toolsRef = new AtomicReference<>();
 
 		var mcpServer = prepareSyncServerBuilder().capabilities(ServerCapabilities.builder().tools(true).build())
 			.tools(tool1)
@@ -887,32 +874,31 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 						.build(), HttpResponse.BodyHandlers.ofString());
 				String responseBody = response.body();
 				assertThat(responseBody).isNotBlank();
+				toolsRef.set(toolsUpdate);
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			rootsRef.set(toolsUpdate);
 		}).build()) {
 
 			InitializeResult initResult = mcpClient.initialize();
 			assertThat(initResult).isNotNull();
 
-			assertThat(rootsRef.get()).isNull();
+			assertThat(toolsRef.get()).isNull();
 
 			assertThat(mcpClient.listTools().tools()).contains(tool1.tool());
 
 			mcpServer.notifyToolsListChanged();
 
 			await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
-				assertThat(rootsRef.get()).containsAll(List.of(tool1.tool()));
+				assertThat(toolsRef.get()).containsAll(List.of(tool1.tool()));
 			});
 
 			// Remove a tool
 			mcpServer.removeTool("tool1");
 
 			await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
-				assertThat(rootsRef.get()).isEmpty();
+				assertThat(toolsRef.get()).isEmpty();
 			});
 
 			// Add a new tool
@@ -928,7 +914,7 @@ public abstract class AbstractMcpClientServerIntegrationTests {
 			mcpServer.addTool(tool2);
 
 			await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
-				assertThat(rootsRef.get()).containsAll(List.of(tool2.tool()));
+				assertThat(toolsRef.get()).containsAll(List.of(tool2.tool()));
 			});
 		}
 
