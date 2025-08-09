@@ -1,6 +1,7 @@
 package io.modelcontextprotocol.server;
 
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,6 +41,15 @@ public class DefaultMcpTransportContext implements McpTransportContext {
 	 */
 	public McpTransportContext copy() {
 		return new DefaultMcpTransportContext(new ConcurrentHashMap<>(this.storage));
+	}
+
+	// TODO for debugging
+
+	@Override
+	public String toString() {
+		return new StringJoiner(", ", DefaultMcpTransportContext.class.getSimpleName() + "[", "]")
+			.add("storage=" + storage)
+			.toString();
 	}
 
 }
