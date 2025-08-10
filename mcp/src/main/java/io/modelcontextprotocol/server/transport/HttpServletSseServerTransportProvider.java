@@ -180,8 +180,8 @@ public class HttpServletSseServerTransportProvider extends HttpServlet implement
 	 * @param messageEndpoint The endpoint path where clients will send their messages
 	 * @param sseEndpoint The endpoint path where clients will establish SSE connections
 	 * @param keepAliveInterval The interval for keep-alive pings, or null to disable
+     * keep-alive functionality
 	 * @param contextExtractor The extractor for transport context from the request.
-	 * keep-alive functionality
 	 * @deprecated Use the builder {@link #builder()} instead for better configuration
 	 * options.
 	 */
