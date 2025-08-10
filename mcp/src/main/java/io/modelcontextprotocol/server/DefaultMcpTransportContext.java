@@ -47,13 +47,4 @@ public class DefaultMcpTransportContext implements McpTransportContext {
 		return new DefaultMcpTransportContext(new ConcurrentHashMap<>(this.storage));
 	}
 
-	// TODO for debugging
-
-	@Override
-	public String toString() {
-		return new StringJoiner(", ", DefaultMcpTransportContext.class.getSimpleName() + "[", "]")
-			.add("storage=" + storage)
-			.toString();
-	}
-
 }
