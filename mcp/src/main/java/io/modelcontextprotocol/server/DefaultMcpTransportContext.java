@@ -5,7 +5,6 @@
 package io.modelcontextprotocol.server;
 
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
