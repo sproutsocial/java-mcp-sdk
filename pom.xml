@@ -4,9 +4,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.modelcontextprotocol.sdk</groupId>
+	<groupId>com.sproutsocial.io.modelcontextprotocol.sdk</groupId>
 	<artifactId>mcp-parent</artifactId>
-	<version>0.11.0-SNAPSHOT</version>
+	<version>0.11.0-sproutsocial-rc1</version>
 
 	<packaging>pom</packaging>
 	<url>https://github.com/modelcontextprotocol/java-sdk</url>
@@ -87,6 +87,7 @@
 		<maven-project-info-reports-plugin.version>3.4.5</maven-project-info-reports-plugin.version>
 		<maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
 		<spring-javaformat-maven-plugin.version>0.0.43</spring-javaformat-maven-plugin.version>
+		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
 		<org.maven.antora-version>1.0.0-alpha.4</org.maven.antora-version>
 		<io.spring.maven.antora-version>0.0.4</io.spring.maven.antora-version>
 		<asciidoctorj-pdf.version>1.6.2</asciidoctorj-pdf.version>
@@ -121,6 +122,24 @@
 						<goals>
 							<goal>validate</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>${frontend-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>install node and npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<phase>generate-test-resources</phase>
+						<configuration>
+							<nodeVersion>v18.19.0</nodeVersion>
+							<npmVersion>10.2.4</npmVersion>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -357,6 +376,7 @@
 	</dependencyManagement>
 
 
+	<!--
 	<repositories>
 		<repository>
 			<id>maven-central</id>
@@ -369,5 +389,17 @@
 			</releases>
 		</repository>
 	</repositories>
+	-->
+
+    <distributionManagement>
+        <repository>
+            <id>internal</id>
+            <url>https://nexus.int.sproutsocial.com/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <url>https://nexus.int.sproutsocial.com/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+	</distributionManagement>
 
 </project>
