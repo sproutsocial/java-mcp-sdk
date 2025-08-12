@@ -23,15 +23,21 @@ class StdioMcpAsyncClientTests extends AbstractMcpAsyncClientTests {
 	@Override
 	protected McpClientTransport createMcpTransport() {
 		ServerParameters stdioParams;
-		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-			stdioParams = ServerParameters.builder("cmd.exe")
-				.args("/c", "npx.cmd", "-y", "@modelcontextprotocol/server-everything", "stdio")
-				.build();
-		}
+        String currentPath = System.getenv("PATH");
+        String nodePath = System.getProperty("user.dir") + "/node";
+        String newPath = nodePath + (currentPath != null ? System.getProperty("path.separator") + currentPath : "");
+
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            stdioParams = ServerParameters.builder("./node/npx.cmd")
+                .args("-y", "@modelcontextprotocol/server-everything", "stdio")
+                .addEnvVar("PATH", newPath)
+                .build();
+        }
 		else {
-			stdioParams = ServerParameters.builder("npx")
-				.args("-y", "@modelcontextprotocol/server-everything", "stdio")
-				.build();
+            stdioParams = ServerParameters.builder("./node/npx")
+                .args("-y", "@modelcontextprotocol/server-everything", "stdio")
+                .addEnvVar("PATH", newPath)
+                .build();
 		}
 		return new StdioClientTransport(stdioParams);
 	}
