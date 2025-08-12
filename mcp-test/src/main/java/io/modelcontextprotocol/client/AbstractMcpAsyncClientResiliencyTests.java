@@ -48,7 +48,8 @@ public abstract class AbstractMcpAsyncClientResiliencyTests {
 
 	// Uses the https://github.com/tzolov/mcp-everything-server-docker-image
 	@SuppressWarnings("resource")
-	static GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v2")
+	static GenericContainer<?> container = new GenericContainer<>(
+			"412335208158.dkr.ecr.us-east-1.amazonaws.com/docker-hub/tzolov/mcp-everything-server:v2")
 		.withCommand("node dist/index.js streamableHttp")
 		.withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()))
 		.withNetwork(network)
