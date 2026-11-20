@@ -255,23 +255,10 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Deploy to US CodeArtifact -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>${maven-deploy-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>us-deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-						<configuration>
-							<altDeploymentRepository>sproutsocial-us-releases::https://sproutsocial-412335208158.d.codeartifact.us-east-1.amazonaws.com/maven/mvn_releases/</altDeploymentRepository>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -415,13 +402,9 @@
 
     <distributionManagement>
         <repository>
-            <id>internal</id>
-            <url>https://nexus.int.sproutsocial.com/nexus/content/repositories/releases/</url>
+            <id>sproutsocial-us-releases</id>
+            <url>https://sproutsocial-412335208158.d.codeartifact.us-east-1.amazonaws.com/maven/mvn_releases/</url>
         </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>https://nexus.int.sproutsocial.com/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>
